@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Autorização Shopee</title>
+<style>
+  :root { --bg:#fafafa; --card:#fff; --text:#222; --muted:#666; --accent:#ee4d2d; --border:#e5e5e5; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#161616; --card:#1f1f1f; --text:#eee; --muted:#aaa; --border:#333; }
+  }
+  body { margin:0; background:var(--bg); color:var(--text); font:16px/1.5 system-ui, sans-serif; }
+  main { max-width:560px; margin:40px auto; padding:0 16px; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:24px; }
+  h1 { font-size:20px; margin:0 0 8px; }
+  p { color:var(--muted); margin:0 0 16px; }
+  label { display:block; font-weight:600; margin:16px 0 4px; }
+  .row { display:flex; gap:8px; }
+  input { flex:1; min-width:0; padding:10px; border:1px solid var(--border); border-radius:8px;
+          background:var(--bg); color:var(--text); font:14px ui-monospace, monospace; }
+  button { padding:10px 14px; border:0; border-radius:8px; background:var(--accent); color:#fff; font-weight:600; cursor:pointer; }
+  .ok { color:#1a9c4a; font-weight:600; }
+</style>
+</head>
+<body>
+<main>
+  <div class="card" id="card"></div>
+</main>
+<script>
+  // Esta página não envia nada a lugar nenhum: ela só mostra o que a Shopee
+  // colocou no endereço depois que você autorizou a loja.
+  const q = new URLSearchParams(location.search);
+  const fields = [["code", "Código (code)"], ["shop_id", "ID da loja (shop_id)"], ["main_account_id", "ID da conta principal (main_account_id)"]]
+    .filter(([k]) => q.get(k));
+  const card = document.getElementById("card");
+
+  if (!fields.length) {
+    card.innerHTML = "<h1>Página de retorno da Shopee</h1><p>Esta página recebe a autorização da sua loja. Nenhum dado chegou ainda.</p>";
+  } else {
+    card.innerHTML = "<h1 class='ok'>✔ Loja autorizada</h1><p>Copie a linha abaixo e cole no Claude. O código vale por poucos minutos.</p>";
+    const all = fields.map(([k]) => k + "=" + q.get(k)).join("&");
+    addRow("Tudo junto (cole isto no Claude)", all);
+    fields.forEach(([k, label]) => addRow(label, q.get(k)));
+  }
+
+  function addRow(label, value) {
+    const l = document.createElement("label"); l.textContent = label;
+    const row = document.createElement("div"); row.className = "row";
+    const input = document.createElement("input"); input.readOnly = true; input.value = value;
+    const btn = document.createElement("button"); btn.textContent = "Copiar";
+    btn.onclick = async () => {
+      try { await navigator.clipboard.writeText(value); } catch { input.select(); document.execCommand("copy"); }
+      btn.textContent = "Copiado!"; setTimeout(() => btn.textContent = "Copiar", 1500);
+    };
+    row.append(input, btn); card.append(l, row);
+  }
+</script>
+</body>
+</html>
